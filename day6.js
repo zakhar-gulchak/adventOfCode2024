@@ -21,6 +21,7 @@ async function fetchData () {
       if (lines[i].match(/[<>^v]/g)) break;
     }
     let j = lines[i].indexOf('^'); // || lines[i].indexOf('>') || lines[i].indexOf('<') || lines[i].indexOf('v');
+    const startI = i, startJ = j;
     const directions = [
       [-1,0], // up
       [0, 1], // right
@@ -29,21 +30,12 @@ async function fetchData () {
     ];
     let curDirection = 0;
     const visited = new Set();
-    const path = new Set();
 
-    while (
-      i >= 0 &&
-      i < lines.length &&
-      j >= 0 &&
-      j < lines[0].length
-    ) {
-      path.add(`[${i}][${j}]`);
-      visited.add(`[${i}][${j}][${curDirection}]`);
+    while (0 <= i && i < lines.length && 0 <= j && j < lines[0].length) {
+      visited.add(`[${i}][${j}]`);
       if (
-        i+directions[curDirection][0] >= 0 &&
-        i+directions[curDirection][0] < lines.length &&
-        j+directions[curDirection][1] >= 0 &&
-        j+directions[curDirection][1] < lines[0].length &&
+        0 <= i+directions[curDirection][0] && i+directions[curDirection][0] < lines.length &&
+        0 <= j+directions[curDirection][1] && j+directions[curDirection][1] < lines[0].length &&
         lines[i+directions[curDirection][0]][j+directions[curDirection][1]] === '#'
       ) {
         curDirection++;
@@ -56,24 +48,19 @@ async function fetchData () {
       }
     }
 
-    console.log(path.size);
     console.log(visited.size);
-    visited.delete(`[${i-directions[curDirection][0]}][${j-directions[curDirection][1]}][${curDirection}]`);
-    visited.delete(`[${i-directions[curDirection][0]*2}][${j-directions[curDirection][1]*2}][${curDirection}]`);
+    visited.delete(`[${startI}][${startJ}]`);
     console.log(visited.size);
 
     let possibleLoops = 0;
     for (const key of visited) {
-      let [i, j, curDirection] = key.match(/\d+/g).map(Number);
+      let i = startI, j = startJ;
+      let curDirection = 0;
+      let [obstI, obstJ] = key.match(/\d+/g).map(Number);
       const visited = new Set();
-      const newObstacle = [i + directions[curDirection][0], j + directions[curDirection][1]];
+      const newObstacle = [obstI, obstJ];
 
-      while (
-        i >= 0 &&
-        i < lines.length &&
-        j >= 0 &&
-        j < lines[0].length
-      ) {
+      while (0 <= i && i < lines.length && 0 <= j && j < lines[0].length) {
         if (visited.has(`[${i}][${j}][${curDirection}]`)) {
           possibleLoops++;
           break;
@@ -81,10 +68,8 @@ async function fetchData () {
         visited.add(`[${i}][${j}][${curDirection}]`);
 
         if (
-          i+directions[curDirection][0] >= 0 &&
-          i+directions[curDirection][0] < lines.length &&
-          j+directions[curDirection][1] >= 0 &&
-          j+directions[curDirection][1] < lines[0].length &&
+          0 <= i+directions[curDirection][0] && i+directions[curDirection][0] < lines.length &&
+          0 <= j+directions[curDirection][1] && j+directions[curDirection][1] < lines[0].length &&
           (
             lines[i+directions[curDirection][0]][j+directions[curDirection][1]] === '#' ||
             (i+directions[curDirection][0] === newObstacle[0] && j+directions[curDirection][1] === newObstacle[1])
