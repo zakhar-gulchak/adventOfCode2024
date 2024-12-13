@@ -2,7 +2,7 @@ async function fetchData () {
   try {
     const { body } = await fetch('https://adventofcode.com/2024/day/11/input', {
       headers: {
-        'Cookie': '',
+        'Cookie': 'session=53616c7465645f5f24524e54357a7463a26032b097d30f92fe78ea90e54c3b6688279b280bc8209b86289cfafaf19123a4d58d3729b42ed870819e7eb64069d1\n',
       }
     })
     const reader = await body.getReader()
@@ -14,29 +14,33 @@ async function fetchData () {
       data += decoder.decode(value, { stream: true });
     }
 
-    const stones = data.split(' ').map(Number);
-    for (let i = 0; i < 75; i++) {
-      const stLength = stones.length;
-      const toInsert = new Map();
-      for (let j = 0; j < stLength; j++) {
-        if (stones[j] === 0) {
-          stones[j] = 1;
-        } else if (stones[j].toString().length % 2 === 0) {
-          toInsert.set(j, Number(stones[j].toString().slice(stones[j].toString().length / 2)));
-          stones[j] = Number(stones[j].toString().slice(0, stones[j].toString().length / 2));
-        } else {
-          stones[j] *= 2024;
-        }
-      }
+    const blinkAtStone = (numberOnStone, timesToBlink, cache = {}) => {
+        if (cache[`${numberOnStone},${timesToBlink}`])
+          return cache[`${numberOnStone},${timesToBlink}`];
 
-      let inserted = 0;
-      for (const [key, val] of toInsert.entries()) {
-        stones.splice(key + inserted, 0, val);
-        inserted++;
-      }
-    }
+        if (timesToBlink === 0) return 1;
 
-    console.log(stones.length)
+        if (numberOnStone === 0) return blinkAtStone(1, timesToBlink - 1, cache);
+
+        if (numberOnStone.toString().length % 2 !== 0)
+          return blinkAtStone(2024 * numberOnStone, timesToBlink - 1, cache);
+
+        const n = numberOnStone.toString();
+
+        return (cache[`${numberOnStone},${timesToBlink}`] =
+          blinkAtStone(parseInt(n.slice(0, n.length / 2)), timesToBlink - 1, cache) +
+          blinkAtStone(
+            parseInt(n.slice(n.length / 2, n.length)),
+            timesToBlink - 1,
+            cache
+          ));
+      };
+
+    const num = data.split(' ').map(Number)
+      .map((stoneNum) => blinkAtStone(stoneNum, 75))
+      .reduce((sum, numStones) => sum + numStones);
+
+    console.log(num)
   } catch (error) {
     console.error('Fetching data failed:', error)
   }
